@@ -1,0 +1,20 @@
+{
+    "name": "acalsa/respaldos",
+    "description": "System backups",
+    "type": "project",
+    "require": {
+        "getbrevo/brevo-php": "^1.0"
+    },
+    "license": "Apache",
+    "autoload": {
+        "psr-4": {
+            "Acalsa\\Respaldos\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Alfonso Carrasco",
+            "email": "ing.alfonso.carrasco@gmail.com"
+        }
+    ]
+}
