@@ -1,98 +1,55 @@
 #!/bin/bash
 
-# Cargar variables de entorno desde el archivo .env
-if [ -f .env ]; then
-  export $(cat .env | xargs)
+# Get the absolute path of the directory where the script is running
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load environment variables from the .env file
+if [ -f "$script_dir/.env" ]; then
+  export $(cat "$script_dir/.env" | xargs)
 fi
 
-# Obtener la fecha actual en el formato YMD (año, mes, día)
+# Get the current date in YMD format (year, month, day)
 current_date=$(date +"%Y%m%d")
 
-# Configuración de las credenciales de SendGrid
+# SendGrid credentials configuration
 api_key="$SENDGRID_API_KEY"
-from_email="respaldos_$current_date@$ENDPOINT"
+from_email="backups_$current_date@$ENDPOINT"
 to_email="$TO_EMAIL"
 subject="Backup Database"
 
-# Nombre del archivo de respaldo
+# Backup file name
 backupFileName="backup_$current_date.sql.gz"
 
-# Realizar el respaldo de la base de datos y comprimirlo
-mysqldump --no-tablespaces -u "$MYSQL_USER"  -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE_EXPORT" | gzip > "$backupFileName"
+# Daily backups directory
+backupDirectory="$script_dir/backups_daily"
 
-# Nombre de la base de datos con la fecha actual
-database_name_test="backup_test_acalsa"
+# Create the daily backups directory if it doesn't exist
+mkdir -p "$backupDirectory"
 
-# Crear la base de datos
-#mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "CREATE DATABASE $database_name_test;"
+# Get the current year and month
+current_year=$(date +"%Y")
+current_month=$(date +"%m")
 
-# Descomprimir el archivo de respaldo y cambiar su nombre
-uncompressedFileName="backup_$current_date.sql.test"
-gunzip -c "$backupFileName" > "$uncompressedFileName"
+# Create the year directory if it doesn't exist
+year_directory="$backupDirectory/$current_year"
+mkdir -p "$year_directory"
 
-# Restaurar la base de datos "backup.sql.test" en la base de datos específica
+# Create the month directory if it doesn't exist
+month_directory="$year_directory/$current_month"
+mkdir -p "$month_directory"
+
+# Perform the database backup and compress it
+mysqldump --no-tablespaces -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE_EXPORT" | gzip > "$month_directory/$backupFileName"
+
+# Name the database with the current date for testing
+database_name_test="$BACKUP_TEST"
+
+# Decompress the backup file and change its name
+uncompressedFileName="$month_directory/backup.sql.test"
+gunzip -c "$month_directory/$backupFileName" > "$uncompressedFileName"
+
+# Restore the database
 mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$database_name_test" < "$uncompressedFileName"
 
-# Verificar que la estructura de la base de datos restaurada sea igual a "$database_name"
-diff_output=$(mysqldiff --user="$MYSQL_USER" --password="$MYSQL_PASSWORD" "$MYSQL_DATABASE_EXPORT" "$uncompressedFileName")
-
-if [ -z "$diff_output" ]; then
-  database_verification_result="La base de datos restaurada es igual a la base de datos que usa el sistema."
-else
-  database_verification_result="Advertencia: La base de datos restaurada no es igual a la base de datos $database_name. Diferencias detectadas:\n$diff_output"
-fi
-
-# Contenido HTML del correo con una plantilla básica
-html_body="
-<!DOCTYPE html>
-<html>
-<head>
-  <title> Respaldo base de datos</title>
-</head>
-<body>
-  <h1>Respaldo  Base de Datos</h1>
-  <p>$database_verification_result</p>
-</body>
-</html>
-"
-
-# Crear un archivo JSON temporal con los datos de la solicitud
-json_file="/tmp/sendgrid_request.json"
-cat <<EOF > "$json_file"
-{
-  "personalizations": [
-    {
-      "to": [
-        {
-          "email": "$to_email"
-        }
-      ],
-      "subject": "$subject"
-    }
-  ],
-  "from": {
-    "email": "$from_email"
-  },
-  "content": [
-    {
-      "type": "text/html",
-      "value": "$html_body"
-    }
-  ],
-  "attachments": [
-    {
-      "content": "$(cat "$backupFileName" | base64 -w 0)",
-      "filename": "$backupFileName",
-      "type": "application/gzip",
-      "disposition": "attachment"
-    }
-  ]
-}
-EOF
-
-# Configuración de la solicitud cURL para enviar el correo electrónico a través de SendGrid
-curl -X "POST" "https://api.sendgrid.com/v3/mail/send" \
-     -H "Authorization: Bearer $api_key" \
-     -H "Content-Type: application/json" \
-     -d "@$json_file"
-
+# Verify that the structure of the restored database is the same as "$MYSQL_DATABASE_EXPORT"
+diff_output=$(mysqldiff --user="$MYSQL_USER" --password
