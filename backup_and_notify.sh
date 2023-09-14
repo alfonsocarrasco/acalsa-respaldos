@@ -47,7 +47,7 @@ database_name_test="$BACKUP_TEST"
 # 🐰 Decompress the backup file and change its name
 uncompressedFileName="$month_directory/backup.sql.test"
 gunzip -c "$month_directory/$backupFileName" > "$uncompressedFileName"
-
+echo uncompressedFileName;
 # 🐿️ Restore the database
 mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$database_name_test" < "$uncompressedFileName"
 
