@@ -1,1 +1,7 @@
 #git ignored
+
+# Folder storage backup_daily
+backup_daily/
+
+# Environment Files
+.env
