@@ -10,10 +10,9 @@ current_date=$(date +"%Y%m%d")
 
 # Configuración de las credenciales de SendGrid
 api_key="$SENDGRID_API_KEY"
-from_email="respaldos_$current_date@acalsa.com"
-to_email="acalsasistema@gmail.com"
-subject="Asunto del correo"
-#html_body="<p>Contenido HTML del correo</p>"
+from_email="respaldos_$current_date@$ENDPOINT"
+to_email="$TO_EMAIL"
+subject="Backup Database"
 
 # Nombre del archivo de respaldo
 backupFileName="backup_$current_date.sql.gz"
@@ -95,5 +94,5 @@ EOF
 curl -X "POST" "https://api.sendgrid.com/v3/mail/send" \
      -H "Authorization: Bearer $api_key" \
      -H "Content-Type: application/json" \
-     -d "@$json_file" > respuesta.txt
+     -d "@$json_file"
 
