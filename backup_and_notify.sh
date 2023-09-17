@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Definir una clase para la gestión de respaldos
-class BackupManager {
-
 # 🐽 Get the absolute path of the script's directory in execution
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -116,4 +113,3 @@ curl -X "POST" "https://api.sendgrid.com/v3/mail/send" \
      -H "Authorization: Bearer $api_key" \
      -H "Content-Type: application/json" \
      -d "@$json_file"
-}
