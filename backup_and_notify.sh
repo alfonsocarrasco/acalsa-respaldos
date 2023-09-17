@@ -41,6 +41,8 @@ mkdir -p "$month_directory"
 # 🐀 Backup the database and compress it 🗃️
 mysqldump --no-tablespaces -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE_EXPORT" | gzip > "$month_directory/$backupFileName"
 
+sleep 30
+
 # 🐹 Database name with the current date 📅
 database_name_test="$BACKUP_TEST"
 
@@ -51,8 +53,12 @@ gunzip -c "$month_directory/$backupFileName" > "$uncompressedFileName"
 # 🐿️ Restore the database
 mysql -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$database_name_test" < "$uncompressedFileName"
 
+sleep 30
+
 # 🦫 Verify that the structure of the restored database is equal to "$database_name" ✅❌
 diff_output=$(mysqldiff -u="$MYSQL_USER" -p="$MYSQL_PASSWORD" "$MYSQL_DATABASE_EXPORT" "$uncompressedFileName")
+
+sleep 15
 
 if [ -z "$diff_output" ]; then
   database_verification_result="The restored database is equal to the system's database. ✅"
