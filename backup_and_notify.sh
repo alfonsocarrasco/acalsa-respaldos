@@ -61,7 +61,7 @@ diff_output=$(mysqldiff -u="$MYSQL_USER" -p="$MYSQL_PASSWORD" "$MYSQL_DATABASE_E
 sleep 15
 
 if [ -z "$diff_output" ]; then
-  database_verification_result="The restored database is equal to the system's database. ✅"
+  database_verification_result="The restored database is equal to the system's database."
 else
   database_verification_result="Warning: The restored database is not equal to the $database_name database. Differences detected:\n$diff_output ❌"
 fi
@@ -106,7 +106,7 @@ cat <<EOF > "$json_file"
   "attachments": [
     {
       "content": "$(cat "$month_directory/$backupFileName" | base64 -w 0)",
-      "filename": "$month_directory/$backupFileName",
+      "filename": "$backupFileName",
       "type": "application/gzip",
       "disposition": "attachment"
     }
