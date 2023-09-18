@@ -15,7 +15,7 @@ current_date=$(date +"%Y%m%d")
 api_key="$SENDGRID_API_KEY"
 from_email="backups_$current_date@$ENDPOINT"
 to_email="$TO_EMAIL"
-subject="Backup Database 🗄️"
+subject="Backup Database $current_date"
 
 # 🦙 Backup file name
 backupFileName="backup_$current_date.sql.gz"
@@ -105,8 +105,8 @@ cat <<EOF > "$json_file"
   ],
   "attachments": [
     {
-      "content": "$(cat "$backupFileName" | base64 -w 0)",
-      "filename": "$backupFileName",
+      "content": "$(cat "$month_directory/$backupFileName" | base64 -w 0)",
+      "filename": "$month_directory/$backupFileName",
       "type": "application/gzip",
       "disposition": "attachment"
     }
